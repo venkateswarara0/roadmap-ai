@@ -29,5 +29,8 @@ app.register_blueprint(roadmap_bp)
 app.register_blueprint(progress_bp)
 app.register_blueprint(quiz_bp)
 
+with app.app_context():
+    db.create_all()
+
 if __name__ == '__main__':
     app.run(debug=True)
