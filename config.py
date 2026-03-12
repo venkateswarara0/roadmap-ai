@@ -9,9 +9,9 @@ class Config:
 
     @staticmethod
     def get_connection_string():
-        database_url = os.getenv("postgresql://roadmap_db_ygum_user:5hnLWVfDmzAT9xOhawrXguJfbII6vYYw@dpg-d6pfr64r85hc73e2m1gg-a/roadmap_db_ygum")
-        if database_url:
-            if database_url.startswith("postgres://"):
-                database_url = database_url.replace("postgres://", "postgresql://", 1)
-            return database_url
-        return None
+        database_url = os.getenv("DATABASE_URL", "")
+        if not database_url:
+            raise ValueError("DATABASE_URL environment variable is not set!")
+        if database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
+        return database_url

@@ -9,7 +9,9 @@ from routes.quiz import quiz_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = Config.get_connection_string()
+
+database_url = Config.get_connection_string()
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
