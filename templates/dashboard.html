@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - RoadmapAI{% endblock %}
+{% block content %}
+
+<div class="fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">My Roadmaps</h1>
+            <p class="text-gray-500 mt-1">{{ roadmaps|length }} roadmap(s) created</p>
+        </div>
+        <a href="/generate" class="gradient-bg text-white px-6 py-2.5 rounded-full font-semibold hover:opacity-90 transition">
+            + Generate New
+        </a>
+    </div>
+
+    {% if roadmaps %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for roadmap in roadmaps %}
+        <div class="bg-white rounded-2xl shadow-sm p-6 card-hover">
+            <div class="flex items-start justify-between mb-3">
+                <span class="text-2xl">🗺️</span>
+                <span class="text-xs px-2 py-1 rounded-full
+                    {% if roadmap.difficulty == 'Beginner' %}bg-green-100 text-green-700
+                    {% elif roadmap.difficulty == 'Intermediate' %}bg-yellow-100 text-yellow-700
+                    {% else %}bg-red-100 text-red-700{% endif %}">
+                    {{ roadmap.difficulty }}
+                </span>
+            </div>
+            <h3 class="font-bold text-lg text-gray-900 mb-1">{{ roadmap.topic }}</h3>
+            <p class="text-gray-400 text-sm mb-4">~{{ roadmap.estimated_weeks }} weeks • {{ roadmap.nodes|length }} nodes</p>
+            <p class="text-gray-400 text-xs mb-4">{{ roadmap.created_at.strftime('%b %d, %Y') }}</p>
+            <div class="flex gap-2">
+                <a href="/roadmap/{{ roadmap.id }}"
+                   class="flex-1 text-center gradient-bg text-white py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+                    View Roadmap
+                </a>
+                <form method="POST" action="/roadmap/delete/{{ roadmap.id }}"
+                      onsubmit="return confirm('Delete this roadmap?')">
+                    <button type="submit"
+                            class="px-3 py-2 bg-red-50 text-red-500 rounded-lg text-sm hover:bg-red-100 transition">
+                        🗑️
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-24">
+        <div class="text-6xl mb-4">🗺️</div>
+        <h2 class="text-xl font-semibold text-gray-700 mb-2">No roadmaps yet</h2>
+        <p class="text-gray-400 mb-6">Generate your first AI learning roadmap</p>
+        <a href="/generate" class="gradient-bg text-white px-8 py-3 rounded-full font-semibold hover:opacity-90 transition">
+            Generate Now →
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RoadmapAI{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .node-pending { border-left: 4px solid #94a3b8; }
+        .node-in_progress { border-left: 4px solid #f59e0b; }
+        .node-done { border-left: 4px solid #10b981; }
+        #roadmap-network { width: 100%; height: 600px; border-radius: 12px; }
+        .flash-success { background: #d1fae5; border: 1px solid #10b981; color: #065f46; }
+        .flash-error { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
+        .progress-bar { transition: width 0.8s ease; }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .fade-in { animation: fadeInUp 0.5s ease forwards; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- Navbar -->
+<nav class="gradient-bg shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <a href="/" class="text-white font-bold text-xl flex items-center gap-2">
+            🗺️ RoadmapAI
+        </a>
+        <div class="flex items-center gap-4">
+            {% if current_user.is_authenticated %}
+                <a href="/dashboard" class="text-white/80 hover:text-white text-sm">Dashboard</a>
+                <a href="/generate" class="bg-white text-purple-700 px-4 py-1.5 rounded-full text-sm font-medium hover:bg-purple-50">+ New Roadmap</a>
+                <span class="text-white/70 text-sm">Hi, {{ current_user.username }} 👋</span>
+                <a href="/logout" class="text-white/60 hover:text-white text-sm">Logout</a>
+            {% else %}
+                <a href="/login" class="text-white/80 hover:text-white text-sm">Login</a>
+                <a href="/register" class="bg-white text-purple-700 px-4 py-1.5 rounded-full text-sm font-medium">Get Started</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 mt-4">
+            {% for category, message in messages %}
+                <div class="flash-{{ category }} px-4 py-3 rounded-lg mb-2 text-sm">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-4 py-8">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="text-center text-gray-400 text-sm py-8 mt-12">
+    Built with ❤️ using Flask + AI | RoadmapAI 2025
+</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

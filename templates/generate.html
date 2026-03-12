@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Generate Roadmap - RoadmapAI{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto fade-in">
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-bold text-gray-900 mb-3">Generate Your Roadmap</h1>
+        <p class="text-gray-500">Enter any topic and AI will build your complete learning path</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm p-8">
+        <form method="POST" id="generateForm">
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">What do you want to learn?</label>
+                <input type="text" name="topic" id="topicInput" required placeholder="e.g. Machine Learning, Web Development, Guitar..."
+                    class="w-full border border-gray-200 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-purple-400">
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <button type="button" onclick="setTopic('Python Programming')"
+                    class="border border-purple-200 text-purple-600 py-2 px-3 rounded-lg text-sm hover:bg-purple-50 transition">
+                    Python Programming
+                </button>
+                <button type="button" onclick="setTopic('Machine Learning')"
+                    class="border border-purple-200 text-purple-600 py-2 px-3 rounded-lg text-sm hover:bg-purple-50 transition">
+                    Machine Learning
+                </button>
+                <button type="button" onclick="setTopic('Web Development')"
+                    class="border border-purple-200 text-purple-600 py-2 px-3 rounded-lg text-sm hover:bg-purple-50 transition">
+                    Web Development
+                </button>
+                <button type="button" onclick="setTopic('Data Science')"
+                    class="border border-purple-200 text-purple-600 py-2 px-3 rounded-lg text-sm hover:bg-purple-50 transition">
+                    Data Science
+                </button>
+                <button type="button" onclick="setTopic('Cybersecurity')"
+                    class="border border-purple-200 text-purple-600 py-2 px-3 rounded-lg text-sm hover:bg-purple-50 transition">
+                    Cybersecurity
+                </button>
+                <button type="button" onclick="setTopic('UI/UX Design')"
+                    class="border border-purple-200 text-purple-600 py-2 px-3 rounded-lg text-sm hover:bg-purple-50 transition">
+                    UI/UX Design
+                </button>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
+                🤖 Generate Roadmap with AI
+            </button>
+        </form>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+function setTopic(topic) {
+    document.getElementById('topicInput').value = topic;
+}
+document.getElementById('generateForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '⏳ Generating your roadmap... please wait';
+    btn.disabled = true;
+    btn.classList.add('opacity-70');
+});
+</script>
+{% endblock %}
+{% endblock %}

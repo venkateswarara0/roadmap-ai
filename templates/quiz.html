@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Quiz - {{ node.title }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto fade-in">
+    <a href="/roadmap/{{ roadmap.id }}" class="text-purple-500 text-sm hover:underline">← Back to Roadmap</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-2 mb-1">Quiz: {{ node.title }}</h1>
+    <p class="text-gray-400 text-sm mb-6">{{ roadmap.topic }} • {{ questions|length }} questions</p>
+
+    <div id="quiz-container" class="space-y-6">
+        {% for q in questions %}
+        <div class="bg-white rounded-2xl shadow-sm p-6" id="q-{{ loop.index0 }}">
+            <p class="font-semibold text-gray-900 mb-4">{{ loop.index }}. {{ q.question }}</p>
+            <div class="space-y-2">
+                {% for option in q.options %}
+                <button onclick="selectAnswer({{ loop.index0 }}, {{ loop.index0 }}, '{{ option|replace("'","") }}', '{{ q.answer|replace("'","") }}')"
+                    class="w-full text-left px-4 py-3 rounded-lg border border-gray-200 text-sm hover:border-purple-400 hover:bg-purple-50 transition"
+                    id="opt-{{ loop.index0 }}-{{ loop.index0 }}">
+                    {{ option }}
+                </button>
+                {% endfor %}
+            </div>
+            <p class="text-xs text-gray-400 mt-3 hidden" id="exp-{{ loop.index0 }}">💡 {{ q.explanation }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="result-box" class="hidden mt-6 bg-white rounded-2xl shadow-sm p-8 text-center">
+        <div class="text-5xl mb-4" id="result-emoji">🎉</div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2" id="result-text"></h2>
+        <p class="text-gray-400 mb-6" id="result-sub"></p>
+        <a href="/roadmap/{{ roadmap.id }}" class="gradient-bg text-white px-8 py-3 rounded-full font-semibold hover:opacity-90">
+            Back to Roadmap
+        </a>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+const totalQ = {{ questions|length }};
+const nodeId = {{ node.id }};
+let score = 0;
+let answered = 0;
+
+function selectAnswer(qIdx, optIdx, selected, correct) {
+    const buttons = document.querySelectorAll(`[id^="opt-${qIdx}-"]`);
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent.trim() === correct) {
+            btn.classList.add('bg-green-50', 'border-green-400', 'text-green-700');
+        }
+    });
+    if (selected === correct) {
+        score++;
+        document.getElementById(`opt-${qIdx}-${optIdx}`).classList.add('bg-green-50', 'border-green-400');
+    } else {
+        document.getElementById(`opt-${qIdx}-${optIdx}`).classList.add('bg-red-50', 'border-red-400', 'text-red-600');
+    }
+    document.getElementById(`exp-${qIdx}`).classList.remove('hidden');
+    answered++;
+    if (answered === totalQ) submitQuiz();
+}
+
+function submitQuiz() {
+    fetch('/submit_quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ node_id: nodeId, score: score, total: totalQ })
+    }).then(() => {
+        setTimeout(() => {
+            const pct = Math.round((score / totalQ) * 100);
+            document.getElementById('result-emoji').textContent = pct >= 80 ? '🏆' : pct >= 50 ? '👍' : '📚';
+            document.getElementById('result-text').textContent = `You scored ${score}/${totalQ} (${pct}%)`;
+            document.getElementById('result-sub').textContent = pct >= 80 ? 'Excellent work!' : pct >= 50 ? 'Good effort, keep going!' : 'Review this topic and try again!';
+            document.getElementById('result-box').classList.remove('hidden');
+            document.getElementById('result-box').scrollIntoView({ behavior: 'smooth' });
+        }, 800);
+    });
+}
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}{{ roadmap.topic }} - RoadmapAI{% endblock %}
+{% block content %}
+
+<div class="fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div>
+            <a href="/dashboard" class="text-purple-500 text-sm hover:underline">← Dashboard</a>
+            <h1 class="text-3xl font-bold text-gray-900 mt-1">{{ roadmap.topic }}</h1>
+            <div class="flex gap-3 mt-2 flex-wrap">
+                <span class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full">{{ roadmap.difficulty }}</span>
+                <span class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full">~{{ roadmap.estimated_weeks }} weeks</span>
+                <span class="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full">{{ nodes|length }} nodes</span>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="exportPDF()"
+                class="border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition">
+                📄 Export PDF
+            </button>
+            <button onclick="toggleAdvisor()"
+                class="gradient-bg text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+                🤖 AI Advisor
+            </button>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm mb-6">
+        <div class="flex justify-between text-sm mb-2">
+            <span class="font-medium text-gray-700">Overall Progress</span>
+            <span class="font-bold text-purple-600">{{ percent }}%</span>
+        </div>
+        <div class="w-full bg-gray-100 rounded-full h-3">
+            <div class="gradient-bg h-3 rounded-full progress-bar" style="width: {{ percent }}%"></div>
+        </div>
+        <div class="flex gap-6 mt-3 text-xs text-gray-400">
+            <span>✅ Done: {{ progress_map.values()|list|select('equalto','done')|list|length }}</span>
+            <span>🔄 In Progress: {{ progress_map.values()|list|select('equalto','in_progress')|list|length }}</span>
+            <span>⏳ Pending: {{ progress_map.values()|list|select('equalto','pending')|list|length }}</span>
+        </div>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="flex gap-2 mb-4">
+        <button onclick="showView('graph')" id="btn-graph"
+            class="px-4 py-2 rounded-lg text-sm font-medium gradient-bg text-white">
+            🕸️ Graph View
+        </button>
+        <button onclick="showView('list')" id="btn-list"
+            class="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-600">
+            📋 List View
+        </button>
+    </div>
+
+    <!-- Graph View -->
+    <div id="view-graph" class="bg-white rounded-2xl shadow-sm p-4 mb-6">
+        <div id="roadmap-network" style="height: 500px;"></div>
+    </div>
+
+    <!-- List View -->
+    <div id="view-list" class="hidden space-y-4 mb-6">
+        {% for node in nodes %}
+        <div class="bg-white rounded-2xl shadow-sm p-6 node-{{ progress_map[node.id] }} card-hover" id="node-card-{{ node.id }}">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="w-7 h-7 gradient-bg text-white rounded-full text-xs flex items-center justify-center font-bold">
+                            {{ node.node_order }}
+                        </span>
+                        <h3 class="font-bold text-gray-900">{{ node.title }}</h3>
+                        <span class="text-xs px-2 py-0.5 rounded-full
+                            {% if node.difficulty == 'Beginner' %}bg-green-100 text-green-600
+                            {% elif node.difficulty == 'Intermediate' %}bg-yellow-100 text-yellow-600
+                            {% else %}bg-red-100 text-red-600{% endif %}">
+                            {{ node.difficulty }}
+                        </span>
+                    </div>
+                    <p class="text-gray-500 text-sm ml-10 mb-3">{{ node.description }}</p>
+                    <p class="text-gray-400 text-xs ml-10 mb-3">⏱ ~{{ node.estimated_hours }} hours</p>
+
+                    <!-- Resources -->
+                    {% if node.resources %}
+                    <div class="ml-10 flex flex-wrap gap-2 mb-3">
+                        {% for res in node.resources %}
+                        <a href="{{ res.url }}" target="_blank"
+                           class="text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition">
+                            {% if res.resource_type == 'video' %}🎥
+                            {% elif res.resource_type == 'course' %}📚
+                            {% elif res.resource_type == 'docs' %}📖
+                            {% else %}🔗{% endif %}
+                            {{ res.title }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Controls -->
+                <div class="flex flex-col gap-2 ml-4">
+                    <select onchange="updateProgress({{ node.id }}, this.value)"
+                        class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        <option value="pending" {% if progress_map[node.id] == 'pending' %}selected{% endif %}>⏳ Pending</option>
+                        <option value="in_progress" {% if progress_map[node.id] == 'in_progress' %}selected{% endif %}>🔄 In Progress</option>
+                        <option value="done" {% if progress_map[node.id] == 'done' %}selected{% endif %}>✅ Done</option>
+                    </select>
+                    <a href="/quiz/{{ node.id }}"
+                       class="text-xs text-center px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition">
+                        🧠 Quiz
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- AI Advisor Panel -->
+    <div id="advisor-panel" class="hidden fixed bottom-6 right-6 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50">
+        <div class="gradient-bg rounded-t-2xl p-4 flex justify-between items-center">
+            <span class="text-white font-semibold">🤖 AI Advisor — {{ roadmap.topic }}</span>
+            <button onclick="toggleAdvisor()" class="text-white/70 hover:text-white text-lg">✕</button>
+        </div>
+        <div id="chat-messages" class="h-72 overflow-y-auto p-4 space-y-3 text-sm"></div>
+        <div class="p-4 border-t border-gray-100 flex gap-2">
+            <input type="text" id="chat-input" placeholder="Ask anything about this roadmap..."
+                class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()"
+                class="gradient-bg text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
+                Send
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const roadmapId = {{ roadmap.id }};
+const nodes = [
+    {% for node in nodes %}
+    {
+        id: {{ node.id }},
+        label: "{{ node.node_order }}. {{ node.title|replace('"', '') }}",
+        title: "{{ node.description|replace('"', '')|truncate(80) }}",
+        status: "{{ progress_map[node.id] }}",
+        order: {{ node.node_order }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Build vis.js network
+const visNodes = new vis.DataSet(nodes.map(n => ({
+    id: n.id,
+    label: n.label,
+    title: n.title,
+    color: {
+        background: n.status === 'done' ? '#d1fae5' : n.status === 'in_progress' ? '#fef3c7' : '#ede9fe',
+        border: n.status === 'done' ? '#10b981' : n.status === 'in_progress' ? '#f59e0b' : '#7c3aed',
+        highlight: { background: '#c4b5fd', border: '#7c3aed' }
+    },
+    font: { size: 13, color: '#1f2937' }
+})));
+
+const edges = new vis.DataSet([
+    {% for i in range(nodes|length - 1) %}
+    { from: {{ nodes[i].id }}, to: {{ nodes[i+1].id }}, arrows: 'to', color: '#e5e7eb' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]);
+
+const container = document.getElementById('roadmap-network');
+const data = { nodes: visNodes, edges: edges };
+const options = {
+    physics: { enabled: true, solver: 'forceAtlas2Based' },
+    interaction: { hover: true }
+};
+const network = new vis.Network(container, data, options);
+
+// UI Functions
+function showView(view) {
+    if (view === 'graph') {
+        document.getElementById('view-graph').classList.remove('hidden');
+        document.getElementById('view-list').classList.add('hidden');
+        document.getElementById('btn-graph').className = "px-4 py-2 rounded-lg text-sm font-medium gradient-bg text-white";
+        document.getElementById('btn-list').className = "px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-600";
+    } else {
+        document.getElementById('view-graph').classList.add('hidden');
+        document.getElementById('view-list').classList.remove('hidden');
+        document.getElementById('btn-list').className = "px-4 py-2 rounded-lg text-sm font-medium gradient-bg text-white";
+        document.getElementById('btn-graph').className = "px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-600";
+    }
+}
+
+function toggleAdvisor() {
+    document.getElementById('advisor-panel').classList.toggle('hidden');
+}
+
+async function updateProgress(nodeId, status) {
+    const response = await fetch(`/update_progress/${nodeId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
+    });
+    if (response.ok) {
+        window.location.reload();
+    }
+}
+</script>
+{% endblock %}
